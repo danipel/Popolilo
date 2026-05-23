@@ -8,7 +8,7 @@
       "enabled": true,
       "priority": 10,
       "registered_commands": {
-        "gemini": [
+        "copilot": [
           "speckit.git.feature",
           "speckit.git.validate",
           "speckit.git.remote",
@@ -17,7 +17,7 @@
         ]
       },
       "registered_skills": [],
-      "installed_at": "2026-05-19T21:29:28.108407+00:00"
+      "installed_at": "2026-05-23T19:52:03.512936+00:00"
     }
   }
 }

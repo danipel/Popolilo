@@ -1,8 +1,10 @@
-description = "Auto-commit changes after a Spec Kit command completes"
+---
+description: Auto-commit changes after a Spec Kit command completes
+---
 
-# Source: git
 
-prompt = """
+<!-- Extension: git -->
+<!-- Config: .specify/extensions/git/ -->
 # Auto-Commit Changes
 
 Automatically stage and commit all changes after a Spec Kit command completes.
@@ -47,4 +49,3 @@ auto_commit:
 - If Git is not available or the current directory is not a repository: skips with a warning
 - If no config file exists: skips (disabled by default)
 - If no changes to commit: skips with a message
-"""

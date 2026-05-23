@@ -1,11 +1,15 @@
-description = "Create or update the project constitution from interactive or provided principle inputs, ensuring all dependent templates stay in sync."
-
-prompt = """
+---
+description: Create or update the project constitution from interactive or provided principle inputs, ensuring all dependent templates stay in sync.
+handoffs: 
+  - label: Build Specification
+    agent: speckit.specify
+    prompt: Implement the feature specification based on the updated constitution. I want to build...
+---
 
 ## User Input
 
 ```text
-{{args}}
+$ARGUMENTS
 ```
 
 You **MUST** consider the user input before proceeding (if not empty).
@@ -143,4 +147,4 @@ Check if `.specify/extensions.yml` exists in the project root.
     Executing: `/{command}`
     EXECUTE_COMMAND: {command}
     ```
-- If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently"""
+- If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently
