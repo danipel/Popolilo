@@ -16,7 +16,14 @@
 
 ---
 
-## 2. Arquitectura General
+## 2. Clarifications
+
+### Session 2026-05-23
+- Q: ¿Cómo manejar errores de autenticación — detallar qué falló o genéricos? → A: **Mensajes genéricos** — Logging registra timestamp + email + outcome (éxito/fallo) sin rate limiting v1.
+
+---
+
+## 3. Arquitectura General
 
 ### Estilo: Clean Architecture
 
@@ -54,7 +61,7 @@
 
 ---
 
-## 3. Modelo de Dominio
+## 4. Modelo de Dominio
 
 ### Entidades
 
@@ -105,7 +112,7 @@
 
 ---
 
-## 4. Historias de Usuario y Especificaciones
+## 5. Historias de Usuario y Especificaciones
 
 ---
 
@@ -120,6 +127,7 @@
 - La contraseña requiere: mínimo 8 caracteres, al menos 1 mayúscula y 1 número.
 - El token JWT expira después de 24 horas.
 - El password nunca se almacena en texto plano.
+- **Manejo de errores:** Mensajes genéricos (ej: "Credenciales inválidas") sin revelar si el email existe. Logging interno registra timestamp + email + outcome (éxito/fallo).
 
 #### Casos de uso
 1. `RegisterUser(email, password) → User`
@@ -441,7 +449,7 @@ GET /admin/metrics
 
 ---
 
-## 5. Casos especiales — Historias de plataforma
+## 6. Casos especiales — Historias de plataforma
 
 ### Historia 8 — LMS: Sistema de entregas de estudiantes
 
@@ -542,7 +550,7 @@ barrier = threading.Barrier(3)
 
 ---
 
-## 6. Estructura de carpetas sugerida
+## 7. Estructura de carpetas sugerida
 
 ```
 src/
@@ -574,7 +582,7 @@ tests/
 
 ---
 
-## 7. Matriz de patrones de diseño
+## 8. Matriz de patrones de diseño
 
 | Patrón | Dónde se usa | Historia |
 |---|---|---|
@@ -596,7 +604,7 @@ tests/
 
 ---
 
-## 8. Checklist de entrega
+## 9. Checklist de entrega
 
 ### Funcional
 - [ ] H1: Registro y login con JWT funcionando

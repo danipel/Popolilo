@@ -8,6 +8,14 @@ El sistema será un backend distribuido concurrente. La autenticación debe ser 
 
 ---
 
+## Clarifications
+
+### Session 2026-05-23
+- Q: ¿Validación de email: regex simple o RFC 5322 robusto? → A: email-validator library (RFC 5322 compliant)
+- Q: ¿Claims del JWT? → A: `sub` (user_id), `role`, `iat`, `exp`, `email`
+
+---
+
 ## Requerimientos Funcionales
 
 ### RF1 - Registro de usuario
@@ -28,9 +36,14 @@ El sistema será un backend distribuido concurrente. La autenticación debe ser 
 - **Proceso:**
   - Verificar credenciales contra hash almacenado
   - Generar JWT con expiración de 24 horas
-  - JWT contiene: `user_id`, `role: "user"` (admin para futuras historias)
+  - **JWT claims (RFC 7519 estándar):**
+    - `sub` (subject): user_id (UUID)
+    - `role`: "user" (default; "admin" en futuras iteraciones)
+    - `iat` (issued at): timestamp de emisión (int)
+    - `exp` (expiration): timestamp de expiración (int, iat + 24h)
+    - `email`: email del usuario (string)
 - **Respuesta exitosa:** `200` con `{ "access_token": string, "token_type": "bearer" }`
-- **Error:** `401` si credenciales inválidas
+- **Errores de credenciales:** `401` (sin diferenciar entre email no encontrado vs password incorrecto)
 
 ### RF3 - Middleware de autenticación
 - **Endpoints protegidos:** crear endpoint dummy `GET /me` que retorne `{ "user_id": "uuid-string" }`
@@ -93,8 +106,14 @@ class Email:
     
     @staticmethod
     def _is_valid(email: str) -> bool:
-        # Regex simple o email-validator
-        pass
+        # email-validator library (RFC 5322 compliant)
+        # Implements robust validation per standard
+        from email_validator import validate_email, EmailNotValidError
+        try:
+            validate_email(email)
+            return True
+        except EmailNotValidError:
+            return False
     
     def __eq__(self, other):
         return isinstance(other, Email) and self._value == other._value
