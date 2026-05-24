@@ -8,11 +8,20 @@ El sistema será un backend distribuido concurrente. La autenticación debe ser 
 
 ---
 
-## Clarifications
+## Clarifications y Gaps Resueltos
 
-### Session 2026-05-23
+### Session 2026-05-23 (Clarificación)
 - Q: ¿Validación de email: regex simple o RFC 5322 robusto? → A: email-validator library (RFC 5322 compliant)
 - Q: ¿Claims del JWT? → A: `sub` (user_id), `role`, `iat`, `exp`, `email`
+- Q: ¿Estructura de JWT? → A: Mínimo + email para validaciones de recurso (P2)
+- Q: ¿Error handling? → A: Mensajes genéricos, logging timestamp+email+outcome, sin rate limit v1 (P3)
+- Q: ¿Ciclo de tokens? → A: Access 24h, refresh tokens en v2 (P4)
+- Q: ¿DTOs respuestas? → A: email + timestamps en register/login/me (P5) — **RATIFICADO**
+
+### Session 2026-05-23 (Gaps Resueltos)
+- **Gap 1 - DTOs (P5):** ✅ RESUELTO - Sección "Especificación de DTOs" con ejemplos JSON
+- **Gap 2 - Rate Limiting:** ✅ DOCUMENTADO - v1 NO requiere (futuro: 5 intentos/15min)
+- **Gap 3 - Logging:** ✅ DOCUMENTADO - Integrado en T11 (AuthService): INFO logs para register/login
 
 ---
 
@@ -42,17 +51,79 @@ El sistema será un backend distribuido concurrente. La autenticación debe ser 
     - `iat` (issued at): timestamp de emisión (int)
     - `exp` (expiration): timestamp de expiración (int, iat + 24h)
     - `email`: email del usuario (string)
-- **Respuesta exitosa:** `200` con `{ "access_token": string, "token_type": "bearer" }`
+- **Respuesta exitosa:** `200` con `{ "access_token": string, "token_type": "bearer", "expires_in": 86400 }`
 - **Errores de credenciales:** `401` (sin diferenciar entre email no encontrado vs password incorrecto)
+- **Rate limiting** (v1): sin implementar; futuras versiones 5 intentos fallidos / 15 min por IP
 
 ### RF3 - Middleware de autenticación
-- **Endpoints protegidos:** crear endpoint dummy `GET /me` que retorne `{ "user_id": "uuid-string" }`
+- **Endpoints protegidos:** crear endpoint dummy `GET /me` que retorne usuario actual
 - **Lectura de token:** header `Authorization: Bearer <token>`
 - **Validaciones:**
   - Firma JWT válida
   - Token no expirado
 - **Inyección:** `user_id` en `request.state.user_id`
 - **Errores:** `401` si token faltante, inválido o expirado
+
+---
+
+## Especificación de DTOs (P5 - RESUELTO)
+
+### Decisión P5: Estructura de respuestas API
+
+**Ratificado:** DTOs con email + timestamps para auditoría y debugging.
+
+### RegisterRequest (POST /register)
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePass123"
+}
+```
+
+### RegisterResponse (201 Created)
+```json
+{
+  "user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "email": "user@example.com",
+  "created_at": "2025-01-15T10:30:45.123456Z"
+}
+```
+
+### LoginRequest (POST /login)
+```json
+{
+  "email": "user@example.com",
+  "password": "SecurePass123"
+}
+```
+
+### LoginResponse (200 OK)
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "expires_in": 86400
+}
+```
+
+### UserMeResponse (GET /me)
+```json
+{
+  "user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "email": "user@example.com",
+  "created_at": "2025-01-15T10:30:45.123456Z",
+  "updated_at": "2025-01-15T10:30:45.123456Z"
+}
+```
+
+### ErrorResponse (400/401/409)
+```json
+{
+  "detail": "Email already registered" | "Invalid credentials" | "Invalid email format"
+}
+```
+
+**Implementar en:** `src/presentation/schemas/auth_schemas.py`
 
 ---
 
@@ -306,13 +377,28 @@ settings = Settings()
 
 ---
 
-## No incluido en esta iteración
-- Workers, colas, procesamiento de textos
-- Reportes, WebSockets, métricas
-- Priorización, cancelación
-- Roles admin (estructura lista, sin endpoints)
-- Webhooks
-- **Script de prueba de concurrencia** (se construirá cuando se tenga implementación base)
+## Scope v1 vs v2
+
+### Incluido en v1 (THIS ITERATION)
+- ✅ Autenticación básica: registro, login, JWT
+- ✅ Middleware de autenticación
+- ✅ Value Objects con validación RFC 5322 (email)
+- ✅ Password hashing con bcrypt
+- ✅ Clean Architecture + DDD
+- ✅ Thread-safety con PostgreSQL ACID
+- ✅ Logging básico: timestamp + email + outcome (sin password)
+- ✅ DTOs con email + timestamps
+
+### Pospuesto para v2+
+- ❌ **Rate limiting**: 5 intentos fallidos / 15 min por IP (futuro: slowapi middleware)
+- ❌ **Logging estructurado**: CloudWatch/ELK integration
+- ❌ **Refresh tokens**: Será implementado cuando se agreguen cookies httpOnly
+- ❌ **Workers, colas, procesamiento de textos**
+- ❌ **Reportes, WebSockets, métricas**
+- ❌ **Priorización, cancelación**
+- ❌ **Roles admin** (estructura lista, sin endpoints)
+- ❌ **Webhooks**
+- ❌ **Script de prueba de concurrencia** (se construirá cuando se tenga implementación base)
 
 ---
 
